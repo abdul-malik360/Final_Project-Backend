@@ -1,5 +1,6 @@
 # Import modules needed
 import sqlite3
+from flask import Flask, request, jsonify
 
 
 # putting all the tables in a class
@@ -54,3 +55,7 @@ class QatTables:
 
 
 QatTables()     # calling the class
+
+# starting the Flask app
+app = Flask(__name__)   # allows you to use api
+app.debug = True    # when finds a bug, it continues to run
