@@ -1,11 +1,9 @@
 # Import modules needed
 import sqlite3
 import re
-import phonenumbers
 
 from flask import Flask, request
 from flask_mail import Mail, Message
-from phonenumbers import NumberParseException
 
 
 # putting all the tables in a class
@@ -56,12 +54,6 @@ class QatTables:
                              "CONSTRAINT fk_Vehicles FOREIGN KEY (Reg_Numb) REFERENCES Vehicles (Reg_Numb)"
                              "CONSTRAINT fk_Services FOREIGN KEY (Type) REFERENCES Services (Type))")
         print("Appointments table created successfully")
-        # x = phonenumbers.parse("+27764971338", "ZA")
-        # z = phonenumbers.is_possible_number(x)
-        # y = phonenumbers.is_valid_number(x)
-        # print(x)
-        # print(z)
-        # print(y)
         self.connect.close()    # closes connection to database
 
 
@@ -165,12 +157,8 @@ def client():   # a function to add and view users
 
             regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'    # code to validate email entered
 
-            x = phonenumbers.parse(cell, "ZA")    # code to validate cell number
-            y = phonenumbers.is_possible_number(x)
-            z = phonenumbers.is_valid_number(x)
-
             # entry will only be accepted if email address and cell number is valid
-            if re.search(regex, email, z):
+            if re.search(regex, email):
                 with sqlite3.connect("QAT_Motors.db") as connect:
                     cursor = connect.cursor()
                     cursor.execute("INSERT INTO Clients("
@@ -194,7 +182,7 @@ def client():   # a function to add and view users
             else:
                 response['message'] = "Invalid Email Address"
 
-        except NumberParseException:
+        except ValueError:
             response['message'] = "Invalid Cell Number"
 
         return response
