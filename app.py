@@ -2,8 +2,9 @@
 import sqlite3
 import re
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_mail import Mail, Message
+from datetime import datetime
 
 
 # putting all the tables in a class
@@ -49,8 +50,8 @@ class QatTables:
         # creating a table for cars to book in
         self.connect.execute("CREATE TABLE IF NOT EXISTS Appointments(Reg_Numb TEXT NOT NULL, "
                              "Type TEXT NOT NULL,"
-                             "Day TEXT NOT NULL,"
-                             "Time TEXT NOT NULL PRIMARY KEY,"
+                             "Day DATE NULL,"
+                             "Time TIME NULL PRIMARY KEY,"
                              "CONSTRAINT fk_Vehicles FOREIGN KEY (Reg_Numb) REFERENCES Vehicles (Reg_Numb)"
                              "CONSTRAINT fk_Services FOREIGN KEY (Type) REFERENCES Services (Type))")
         print("Appointments table created successfully")
@@ -58,6 +59,24 @@ class QatTables:
 
 
 QatTables()     # calling the class
+
+
+def get_email(username):
+
+    with sqlite3.connect("QAT_Motors.db") as connect:
+        cursor = connect.cursor()
+        cursor.execute("SELECT Email from Clients WHERE Username='" + str(username) + "'")
+        return cursor.fetchone()
+
+
+def get_username():
+    username = request.form['Username']
+
+    with sqlite3.connect("QAT_Motors.db") as connect:
+        cursor = connect.cursor()
+        cursor.execute(f"SELECT Username from Clients WHERE Username='{username}'")
+        return cursor.fetchone()
+
 
 # starting the Flask app
 app = Flask(__name__)   # allows you to use api
@@ -97,12 +116,18 @@ def admin():    # function to add and show admin users
 
         with sqlite3.connect("QAT_Motors.db") as connect:
             cursor = connect.cursor()
+            cursor.row_factory = sqlite3.Row
             cursor.execute("SELECT * FROM Admin")
 
             admin_users = cursor.fetchall()
 
+            data = []
+
+            for i in admin_users:
+                data.append({u: i[u] for u in i.keys()})
+
         response['status_code'] = 200
-        response['data'] = admin_users
+        response['data'] = data
         return response
 
 
@@ -185,6 +210,333 @@ def client():   # a function to add and view users
         except ValueError:
             response['message'] = "Invalid Cell Number"
 
+        return response
+
+    if request.method == "GET":    # if the function method is get, all data from the Client table is displayed
+        response = {}
+
+        with sqlite3.connect("QAT_Motors.db") as connect:
+            cursor = connect.cursor()
+            cursor.row_factory = sqlite3.Row
+            cursor.execute("SELECT * FROM Clients")
+
+            client_users = cursor.fetchall()
+
+            data = []
+
+            for i in client_users:
+                data.append({u: i[u] for u in i.keys()})
+
+        response['status_code'] = 200
+        response['data'] = data
+        return jsonify(response)
+
+
+@app.route('/client/<username>', methods=["PUT", "GET"])   # created a route that has both put and get methods
+def edit_client(username):
+    response = {}
+
+    if request.method == "PUT":     # this method will edit the client's data
+        try:
+            name = request.form['Name']
+            surname = request.form['Surname']
+            email = request.form['Email']
+            cell = request.form['Cell']
+            address = request.form['Address']
+            # username = request.form['Username']
+            password = request.form['Password']
+
+            with sqlite3.connect("QAT_Motors.db") as connect:
+                cursor = connect.cursor()
+                cursor.execute("UPDATE Clients SET Name=?, Surname=?, Email=?, Cell=?, Address=?, Password=?"
+                               " WHERE Username=?",
+                               (name, surname, email, cell, address, password, username))
+                connect.commit()
+                response['message'] = "Client update was successful"
+                response['status_code'] = 200
+
+            return response
+
+        except ValueError:
+            response["message"] = "Client update was unsuccessful, try again"
+            response["status_code"] = 209
+            return response
+
+    if request.method == "GET":     # this method will delete the client
+        with sqlite3.connect("QAT_Motors.db") as connect:
+            cursor = connect.cursor()
+            cursor.execute("DELETE FROM Clients WHERE Username='" + str(username) + "'")
+            connect.commit()
+            response['status_code'] = 204
+            response['message'] = "Client deleted successfully"
+        return response
+
+
+@app.route('/vehicle', methods=["POST", "GET"])      # a route for vehicles with post and get methods
+def vehicle():   # a function to add and view vehicles
+    response = {}
+
+    if request.method == "POST":    # this method adds vehicles
+        try:
+            car_type = request.form['Type']
+            year_modal = request.form['Year_Modal']
+            vin_numb = request.form['VIN_Numb']
+            reg_numb = request.form['Reg_Numb']
+            username = request.form['Username']
+
+            email = get_email(username)
+            print(email)
+            # valid_user = get_username()
+
+            with sqlite3.connect("QAT_Motors.db") as connect:
+                cursor = connect.cursor()
+                cursor.execute("INSERT INTO Vehicles("
+                               "Type,"
+                               "Year_Modal,"
+                               "VIN_Numb,"
+                               "Reg_Numb,"
+                               "Username) VALUES(?, ?, ?, ?, ?)",
+                               (car_type, year_modal, vin_numb, reg_numb, username))
+                connect.commit()
+
+                # msg = Message('Vehicle Registration Successful', sender='62545a@gmail.com', recipients=[email])
+                # msg.body = "Thank you for registering your vehicle to our services " + username
+                # mail.send(msg)
+                #
+                # response["message"] = "Success, Check Email"
+                # response["status_code"] = 201
+
+        except TypeError:      # check this
+            response['message'] = "Invalid Username"
+
+        return response
+
+    if request.method == "GET":    # if the function method is get, all data from the Vehicles table is displayed
+        response = {}
+
+        with sqlite3.connect("QAT_Motors.db") as connect:
+            cursor = connect.cursor()
+            cursor.row_factory = sqlite3.Row
+            cursor.execute("SELECT * FROM Vehicles")
+
+            vehicles = cursor.fetchall()
+
+            data = []
+
+            for i in vehicles:
+                data.append({u: i[u] for u in i.keys()})
+
+        response['status_code'] = 200
+        response['data'] = data
+        return jsonify(response)
+
+
+@app.route('/vehicle/<reg_numb>', methods=["PUT", "GET"])   # created a route that has both put and get methods
+def edit_vehicle(reg_numb):
+    response = {}
+
+    if request.method == "PUT":     # this method will edit the vehicle's data
+        try:
+            car_type = request.form['Type']
+            year_modal = request.form['Year_Modal']
+            vin_numb = request.form['VIN_Numb']
+            # reg_numb = request.form['Reg_Numb']
+
+            with sqlite3.connect("QAT_Motors.db") as connect:
+                cursor = connect.cursor()
+                cursor.execute("UPDATE Vehicles SET Type=?, Year_Modal=?, VIN_Numb=?"
+                               " WHERE Reg_Numb=?",
+                               (car_type, year_modal, vin_numb, reg_numb))
+                connect.commit()
+                response['message'] = "Vehicle update was successful"
+                response['status_code'] = 200
+
+            return response
+
+        except ValueError:
+            response["message"] = "Vehicle update was unsuccessful, try again"
+            response["status_code"] = 209
+            return response
+
+    if request.method == "GET":     # this method will delete the Vehicle
+        with sqlite3.connect("QAT_Motors.db") as connect:
+            cursor = connect.cursor()
+            cursor.execute("DELETE FROM Vehicles WHERE Reg_Numb='" + str(reg_numb) + "'")
+            connect.commit()
+            response['status_code'] = 204
+            response['message'] = "Vehicle deleted successfully"
+        return response
+
+
+@app.route('/service', methods=["POST", "GET"])      # a route for services with post and get methods
+def service():   # a function to add and view services
+    response = {}
+
+    if request.method == "POST":    # this method adds services
+        try:
+            service_type = request.form['Type']
+            description = request.form['Description']
+            duration = request.form['Duration']
+            price = request.form['Price']
+
+            with sqlite3.connect("QAT_Motors.db") as connect:
+                cursor = connect.cursor()
+                cursor.execute("INSERT INTO Services("
+                               "Type,"
+                               "Description,"
+                               "Duration,"
+                               "Price) VALUES(?, ?, ?, ?)",
+                               (service_type, description, duration, price))
+                connect.commit()
+
+                response["message"] = "Successfully added service"
+                response["status_code"] = 201
+
+        except ValueError:
+            response['message'] = "edit"
+
+        return response
+
+    if request.method == "GET":    # if the function method is get, all data from the Services table is displayed
+        response = {}
+
+        with sqlite3.connect("QAT_Motors.db") as connect:
+            cursor = connect.cursor()
+            cursor.row_factory = sqlite3.Row
+            cursor.execute("SELECT * FROM Services")
+
+            services = cursor.fetchall()
+
+            data = []
+
+            for i in services:
+                data.append({u: i[u] for u in i.keys()})
+
+        response['status_code'] = 200
+        response['data'] = data
+        return response
+
+
+@app.route('/service/<service_type>', methods=["PUT", "GET"])   # created a route that has both put and get methods
+def edit_service(service_type):
+    response = {}
+
+    if request.method == "PUT":     # this method will edit the service's data
+        try:
+            # service_type = request.form['Type']
+            description = request.form['Description']
+            duration = request.form['Duration']
+            price = request.form['Price']
+
+            with sqlite3.connect("QAT_Motors.db") as connect:
+                cursor = connect.cursor()
+                cursor.execute("UPDATE Services SET Description=?, Duration=?, Price=?"
+                               " WHERE Type=?",
+                               (description, duration, price, service_type))
+                connect.commit()
+                response['message'] = "Service update was successful"
+                response['status_code'] = 200
+
+            return response
+
+        except ValueError:
+            response["message"] = "Service update was unsuccessful, try again"
+            response["status_code"] = 209
+            return response
+
+    if request.method == "GET":     # this method will delete the service
+        with sqlite3.connect("QAT_Motors.db") as connect:
+            cursor = connect.cursor()
+            cursor.execute("DELETE FROM Services WHERE Type='" + str(service_type) + "'")
+            connect.commit()
+            response['status_code'] = 204
+            response['message'] = "Service deleted successfully"
+        return response
+
+
+@app.route('/appointments', methods=["POST", "GET"])      # a route for appointments with post and get methods
+def appointments():   # a function to add and view appointments
+    response = {}
+
+    if request.method == "POST":    # this method adds appointments
+        try:
+            reg_numb = request.form['Reg_Numb']
+            service_type = request.form['Type']
+            day = request.form['Day']
+            time = request.form['Time']
+
+            with sqlite3.connect("QAT_Motors.db") as connect:
+                cursor = connect.cursor()
+                cursor.execute("INSERT INTO Appointments("
+                               "Reg_Numb,"
+                               "Type,"
+                               "Day,"
+                               "Time) VALUES(?, ?, ?, ?)",
+                               (reg_numb, service_type, day, time))
+                connect.commit()
+
+                response["message"] = "Successfully added appointment"
+                response["status_code"] = 201
+
+        except ValueError:
+            response['message'] = "edit"
+
+        return response
+
+    if request.method == "GET":    # if the function method is get, all data from the appointments table is displayed
+        response = {}
+
+        with sqlite3.connect("QAT_Motors.db") as connect:
+            cursor = connect.cursor()
+            cursor.row_factory = sqlite3.Row
+            cursor.execute("SELECT * FROM Appointments")
+
+            appointment = cursor.fetchall()
+
+            data = []
+
+            for i in appointment:
+                data.append({u: i[u] for u in i.keys()})
+
+        response['status_code'] = 200
+        response['data'] = data
+        return response
+
+
+@app.route('/appointment/<reg_numb>', methods=["PUT", "GET"])   # created a route that has both put and get methods
+def edit_appointment(reg_numb):
+    response = {}
+
+    if request.method == "PUT":     # this method will edit the appointment's data
+        try:
+            # reg_numb = request.form['Reg_Numb']
+            service_type = request.form['Type']
+            day = request.form['Day']
+            time = request.form['Time']
+
+            with sqlite3.connect("QAT_Motors.db") as connect:
+                cursor = connect.cursor()
+                cursor.execute("UPDATE Appointments SET Type=?, Day=?, Time=?"
+                               " WHERE Reg_Numb=?",
+                               (service_type, day, time, reg_numb))
+                connect.commit()
+                response['message'] = "Appointments update was successful"
+                response['status_code'] = 200
+
+            return response
+
+        except ValueError:
+            response["message"] = "Appointments update was unsuccessful, try again"
+            response["status_code"] = 209
+            return response
+
+    if request.method == "GET":     # this method will delete the service
+        with sqlite3.connect("QAT_Motors.db") as connect:
+            cursor = connect.cursor()
+            cursor.execute("DELETE FROM Services WHERE Type='" + str(service_type) + "'")
+            connect.commit()
+            response['status_code'] = 204
+            response['message'] = "Service deleted successfully"
         return response
 
 
