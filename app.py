@@ -203,7 +203,7 @@ def client():   # a function to add and view users
                     connect.commit()
 
                 msg = Message('Welcome To QAT Motors', sender='62545a@gmail.com', recipients=[email])
-                msg.body = "Thank you for registering to our services " + title + surname
+                msg.body = "Thank you for registering to our services " + title + " " + surname
                 mail.send(msg)
 
                 response["message"] = "Success, Check Email"
