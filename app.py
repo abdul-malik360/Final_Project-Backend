@@ -274,6 +274,19 @@ def edit_client(username):
         return response
 
 
+# a route to view a client
+@app.route('/view-client/<username>', methods=["GET"])
+def view_client(username):
+    response = {}
+    with sqlite3.connect("QAT_Motors.db") as connect:
+        cursor = connect.cursor()
+        cursor.execute("SELECT * FROM Clients WHERE Username='" + str(username) + "'")
+        response["status_code"] = 200
+        response["message"] = "User retrieved successfully"
+        response["data"] = cursor.fetchone()
+    return jsonify(response)
+
+
 @app.route('/vehicle', methods=["POST", "GET"])      # a route for vehicles with post and get methods
 def vehicle():   # a function to add and view vehicles
     response = {}
@@ -368,6 +381,29 @@ def edit_vehicle(reg_numb):
             response['status_code'] = 204
             response['message'] = "Vehicle deleted successfully"
         return response
+
+
+# a route to view a vehicle
+@app.route('/view-vehicle/<reg_numb>', methods=["GET"])
+def view_vehicle(reg_numb):
+    response = {}
+    with sqlite3.connect("QAT_Motors.db") as connect:
+        cursor = connect.cursor()
+        cursor.row_factory = sqlite3.Row
+        cursor.execute("SELECT * FROM Vehicles WHERE Reg_Numb='" + str(reg_numb) + "'")
+
+        vehicle = cursor.fetchone()
+
+        data = []
+
+        for i in vehicle:
+            data.append({i[u] for u in i})
+
+    response['status_code'] = 200
+    # response["message"] = "vehicle retrieved successfully"
+    response['data'] = data
+
+    return jsonify(response)
 
 
 @app.route('/service', methods=["POST", "GET"])      # a route for services with post and get methods
