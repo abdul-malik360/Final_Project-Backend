@@ -5,6 +5,7 @@ import re
 from flask import Flask, request, jsonify
 from flask_mail import Mail, Message
 from datetime import datetime
+from flask_cors import CORS
 
 
 # putting all the tables in a class
@@ -61,7 +62,7 @@ class QatTables:
 QatTables()     # calling the class
 
 
-def get_email(username):
+def get_email(username):    # a function to retrieve email address of clients
 
     with sqlite3.connect("QAT_Motors.db") as connect:
         cursor = connect.cursor()
@@ -69,7 +70,7 @@ def get_email(username):
         return cursor.fetchone()
 
 
-def get_username():
+def get_username():    # a function to retrieve username of clients
     username = request.form['Username']
 
     with sqlite3.connect("QAT_Motors.db") as connect:
@@ -80,6 +81,7 @@ def get_username():
 
 # starting the Flask app
 app = Flask(__name__)   # allows you to use api
+CORS(app)
 app.debug = True    # when finds a bug, it continues to run
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'    # following code is used to send email's through flask
@@ -530,13 +532,13 @@ def edit_appointment(reg_numb):
             response["status_code"] = 209
             return response
 
-    if request.method == "GET":     # this method will delete the service
+    if request.method == "GET":     # this method will delete the appointment's
         with sqlite3.connect("QAT_Motors.db") as connect:
             cursor = connect.cursor()
-            cursor.execute("DELETE FROM Services WHERE Type='" + str(service_type) + "'")
+            cursor.execute("DELETE FROM Appointments WHERE Reg_Numb='" + str(reg_numb) + "'")
             connect.commit()
             response['status_code'] = 204
-            response['message'] = "Service deleted successfully"
+            response['message'] = "Appointment's deleted successfully"
         return response
 
 
