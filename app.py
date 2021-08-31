@@ -198,7 +198,7 @@ def client():   # a function to add and view users
                                    "Cell,"
                                    "Address,"
                                    "Username,"
-                                   "Password) VALUES(?, ?, ?, ?, ?, ?, ?)",
+                                   "Password) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
                                    (name, surname, title, email, cell, address, username, password))
                     connect.commit()
 
