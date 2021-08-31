@@ -24,6 +24,7 @@ class QatTables:
         # creating a table for clients to register
         self.connect.execute("CREATE TABLE IF NOT EXISTS Clients(Name TEXT NOT NULL,"   # command to create the table
                              "Surname TEXT NOT NULL,"
+                             "Title TEXT NOT NULL,"
                              "Email TEXT NOT NULL,"
                              "Cell TEXT NOT NULL,"
                              "Address TEXT NOT NULL,"
@@ -176,6 +177,7 @@ def client():   # a function to add and view users
         try:
             name = request.form['Name']
             surname = request.form['Surname']
+            title = request.form['Title']
             email = request.form['Email']
             cell = request.form['Cell']
             address = request.form['Address']
@@ -191,16 +193,17 @@ def client():   # a function to add and view users
                     cursor.execute("INSERT INTO Clients("
                                    "Name,"
                                    "Surname,"
+                                   "Title,"
                                    "Email,"
                                    "Cell,"
                                    "Address,"
                                    "Username,"
                                    "Password) VALUES(?, ?, ?, ?, ?, ?, ?)",
-                                   (name, surname, email, cell, address, username, password))
+                                   (name, surname, title, email, cell, address, username, password))
                     connect.commit()
 
                 msg = Message('Welcome To QAT Motors', sender='62545a@gmail.com', recipients=[email])
-                msg.body = "Thank you for registering to our services Mr " + surname
+                msg.body = "Thank you for registering to our services " + title + surname
                 mail.send(msg)
 
                 response["message"] = "Success, Check Email"
@@ -397,7 +400,7 @@ def view_vehicle(reg_numb):
         data = []
 
         for i in vehicle:
-            data.append({i[u] for u in i})
+            data.append({u: i[u] for u in i})
 
     response['status_code'] = 200
     # response["message"] = "vehicle retrieved successfully"
