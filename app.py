@@ -94,6 +94,38 @@ app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)    # end of email code config
 
 
+@app.route('/client-login', methods=["GET"])
+def client_login():
+    response = {}
+    username = request.form['Username']
+    password = request.form['Password']
+
+    with sqlite3.connect("QAT_Motors.db") as connect:
+        cursor = connect.cursor()
+        cursor.execute(f"SELECT * from Clients WHERE Username='{username}' AND Password='{password}'")
+
+        response['user'] = cursor.fetchone()
+        response['message'] = "Details recovered"
+
+        return response
+
+
+@app.route('/admin-login', methods=["GET"])
+def admin_login():
+    response = {}
+    username = request.form['Username']
+    password = request.form['Password']
+
+    with sqlite3.connect("QAT_Motors.db") as connect:
+        cursor = connect.cursor()
+        cursor.execute(f"SELECT * from Admin WHERE Username='{username}' AND Password='{password}'")
+
+        response['user'] = cursor.fetchone()
+        response['message'] = "Details recovered"
+
+        return response
+
+
 @app.route('/admin', methods=["POST", "GET"])   # created a route that has both get and post methods
 def admin():    # function to add and show admin users
     response = {}   # making response an empty dictionary
