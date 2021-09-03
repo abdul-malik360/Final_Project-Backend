@@ -94,7 +94,7 @@ app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)    # end of email code config
 
 
-@app.route('/client-login', methods=["GET"])
+@app.route('/client-login', methods=["PATCH"])
 def client_login():
     response = {}
     username = request.form['Username']
