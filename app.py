@@ -207,14 +207,14 @@ def client():   # a function to add and view users
 
     if request.method == "POST":    # this method adds clients
         try:
-            name = request.form['Name']
-            surname = request.form['Surname']
-            title = request.form['Title']
-            email = request.form['Email']
-            cell = request.form['Cell']
-            address = request.form['Address']
-            username = request.form['Username']
-            password = request.form['Password']
+            name = request.json['Name']
+            surname = request.json['Surname']
+            title = request.json['Title']
+            email = request.json['Email']
+            cell = request.json['Cell']
+            address = request.json['Address']
+            username = request.json['Username']
+            password = request.json['Password']
 
             regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'    # code to validate email entered
 
