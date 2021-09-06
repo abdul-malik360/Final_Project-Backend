@@ -275,14 +275,14 @@ def edit_client(username):
 
     if request.method == "PUT":     # this method will edit the client's data
         try:
-            name = request.form['Name']
-            surname = request.form['Surname']
-            title = request.form['Title']
-            email = request.form['Email']
-            cell = request.form['Cell']
-            address = request.form['Address']
+            name = request.json['Name']
+            surname = request.json['Surname']
+            title = request.json['Title']
+            email = request.json['Email']
+            cell = request.json['Cell']
+            address = request.json['Address']
             # username = request.form['Username']
-            password = request.form['Password']
+            password = request.json['Password']
 
             with sqlite3.connect("QAT_Motors.db") as connect:
                 cursor = connect.cursor()
