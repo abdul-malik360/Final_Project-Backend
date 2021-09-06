@@ -497,9 +497,9 @@ def edit_service(service_type):
     if request.method == "PUT":     # this method will edit the service's data
         try:
             # service_type = request.form['Type']
-            description = request.form['Description']
-            duration = request.form['Duration']
-            price = request.form['Price']
+            description = request.json['Description']
+            duration = request.json['Duration']
+            price = request.json['Price']
 
             with sqlite3.connect("QAT_Motors.db") as connect:
                 cursor = connect.cursor()
