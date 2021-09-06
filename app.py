@@ -277,6 +277,7 @@ def edit_client(username):
         try:
             name = request.form['Name']
             surname = request.form['Surname']
+            title = request.form['Title']
             email = request.form['Email']
             cell = request.form['Cell']
             address = request.form['Address']
@@ -285,9 +286,9 @@ def edit_client(username):
 
             with sqlite3.connect("QAT_Motors.db") as connect:
                 cursor = connect.cursor()
-                cursor.execute("UPDATE Clients SET Name=?, Surname=?, Email=?, Cell=?, Address=?, Password=?"
+                cursor.execute("UPDATE Clients SET Name=?, Surname=?, Title=?, Email=?, Cell=?, Address=?, Password=?"
                                " WHERE Username=?",
-                               (name, surname, email, cell, address, password, username))
+                               (name, surname, title, email, cell, address, password, username))
                 connect.commit()
                 response['message'] = "Client update was successful"
                 response['status_code'] = 200
