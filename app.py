@@ -137,18 +137,29 @@ def client_login():
         return response
 
 
-@app.route('/admin-login', methods=["GET"])
+@app.route('/admin-login', methods=["PATCH"])
 def admin_login():
     response = {}
-    username = request.json['Username']
-    password = request.json['Password']
 
-    with sqlite3.connect("QAT_Motors.db") as connect:
-        cursor = connect.cursor()
-        cursor.execute(f"SELECT * from Admin WHERE Username='{username}' AND Password='{password}'")
+    if request.method == "PATCH":
+        username = request.json['Username']
+        password = request.json['Password']
 
-        response['user'] = cursor.fetchone()
-        response['message'] = "Details recovered"
+        with sqlite3.connect("QAT_Motors.db") as connect:
+            cursor = connect.cursor()
+            cursor.row_factory = sqlite3.Row
+            cursor.execute(f"SELECT * from Admin WHERE Username='{username}' AND Password='{password}'")
+
+            admins = cursor.fetchall()
+
+            data = []
+
+            for admin in admins:
+                data.append({a: admin[a] for a in admin.keys()})
+
+            response['message'] = "Details recovered"
+            response['status_code'] = 201
+            response['data'] = data
 
         return response
 
@@ -651,3 +662,5 @@ def edit_appointment(reg_numb):
 
 if __name__ == '__main__':
     app.run()
+
+#
