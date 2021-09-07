@@ -113,15 +113,26 @@ mail = Mail(app)    # end of email code config
 @app.route('/client-login', methods=["PATCH"])
 def client_login():
     response = {}
-    username = request.json['Username']
-    password = request.json['Password']
 
-    with sqlite3.connect("QAT_Motors.db") as connect:
-        cursor = connect.cursor()
-        cursor.execute(f"SELECT * from Clients WHERE Username='{username}' AND Password='{password}'")
+    if request.method == "PATCH":
+        username = request.json['Username']
+        password = request.json['Password']
 
-        response['user'] = cursor.fetchone()
-        response['message'] = "Details recovered"
+        with sqlite3.connect("QAT_Motors.db") as connect:
+            cursor = connect.cursor()
+            cursor.row_factory = sqlite3.Row
+            cursor.execute(f"SELECT * from Clients WHERE Username='{username}' AND Password='{password}'")
+
+            clients = cursor.fetchall()
+
+            data = []
+
+            for client in clients:
+                data.append({c: client[c] for c in client.keys()})
+
+            response['message'] = "Details recovered"
+            response['status_code'] = 201
+            response['data'] = data
 
         return response
 
