@@ -471,19 +471,15 @@ def view_vehicle(reg_numb):
     response = {}
     with sqlite3.connect("QAT_Motors.db") as connect:
         cursor = connect.cursor()
-        cursor.row_factory = sqlite3.Row
+
         cursor.execute("SELECT * FROM Vehicles WHERE Reg_Numb='" + str(reg_numb) + "'")
 
         vehicle = cursor.fetchone()
 
-        data = []
-
-        for i in vehicle:
-            data.append({u: i[u] for u in i})
 
     response['status_code'] = 200
     # response["message"] = "vehicle retrieved successfully"
-    response['data'] = data
+    response['data'] = vehicle
 
     return jsonify(response)
 
