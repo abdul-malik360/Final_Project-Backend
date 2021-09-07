@@ -80,6 +80,22 @@ def get_username():    # a function to retrieve username of clients
         return cursor.fetchone()
 
 
+def get_surname(username):    # a function to retrieve surname of clients
+
+    with sqlite3.connect("QAT_Motors.db") as connect:
+        cursor = connect.cursor()
+        cursor.execute("SELECT Surname from Clients WHERE Username='" + str(username) + "'")
+        return cursor.fetchone()
+
+
+def get_title(username):    # a function to retrieve a title of clients
+
+    with sqlite3.connect("QAT_Motors.db") as connect:
+        cursor = connect.cursor()
+        cursor.execute("SELECT Title from Clients WHERE Username='" + str(username) + "'")
+        return cursor.fetchone()
+
+
 # starting the Flask app
 app = Flask(__name__)   # allows you to use api
 CORS(app)
@@ -207,18 +223,18 @@ def client():   # a function to add and view users
 
     if request.method == "POST":    # this method adds clients
         try:
-            name = request.json['Name']
-            surname = request.json['Surname']
-            title = request.json['Title']
-            email = request.json['Email']
-            cell = request.json['Cell']
-            address = request.json['Address']
-            username = request.json['Username']
-            password = request.json['Password']
+            name = request.form['Name']
+            surname = request.form['Surname']
+            title = request.form['Title']
+            email = request.form['Email']
+            cell = request.form['Cell']
+            address = request.form['Address']
+            username = request.form['Username']
+            password = request.form['Password']
 
             regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'    # code to validate email entered
 
-            # entry will only be accepted if email address and cell number is valid
+            # entry will only be accepted if email address is valid
             if re.search(regex, email):
                 with sqlite3.connect("QAT_Motors.db") as connect:
                     cursor = connect.cursor()
@@ -335,9 +351,17 @@ def vehicle():   # a function to add and view vehicles
             reg_numb = request.json['Reg_Numb']
             username = request.json['Username']
 
-            email = get_email(username)
+            email_tuple = get_email(username)
+            email = ''.join(email_tuple)    # str.join() to convert tuple to string.
             print(email)
-            # valid_user = get_username()
+
+            title_tuple = get_title(username)
+            title = ''.join(title_tuple)  # str.join() to convert tuple to string.
+            print(title)
+
+            surname_tuple = get_surname(username)
+            surname = ''.join(surname_tuple)  # str.join() to convert tuple to string.
+            print(surname)
 
             with sqlite3.connect("QAT_Motors.db") as connect:
                 cursor = connect.cursor()
@@ -350,12 +374,12 @@ def vehicle():   # a function to add and view vehicles
                                (car_type, year_modal, vin_numb, reg_numb, username))
                 connect.commit()
 
-                # msg = Message('Vehicle Registration Successful', sender='62545a@gmail.com', recipients=[email])
-                # msg.body = "Thank you for registering your vehicle to our services " + username
-                # mail.send(msg)
-                #
-                # response["message"] = "Success, Check Email"
-                # response["status_code"] = 201
+                msg = Message('Vehicle Registration Successful', sender='62545a@gmail.com', recipients=[str(email)])
+                msg.body = "Thank you for registering your vehicle to our services " + title + " " + surname
+                mail.send(msg)
+
+                response["message"] = "Successfully added vehicle, Check Email"
+                response["status_code"] = 201
 
         except TypeError:      # check this
             response['message'] = "Invalid Username"
