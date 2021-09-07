@@ -490,10 +490,19 @@ def view_client_vehicle(username):
     response = {}
     with sqlite3.connect("QAT_Motors.db") as connect:
         cursor = connect.cursor()
+        cursor.row_factory = sqlite3.Row
         cursor.execute("SELECT * FROM Vehicles WHERE Username='" + str(username) + "'")
+
+        vehicles = cursor.fetchall()
+
+        data = []
+
+        for i in vehicles:
+            data.append({u: i[u] for u in i.keys()})
+
         response["status_code"] = 200
-        response["message"] = "Vehicle retrieved successfully"
-        response["data"] = cursor.fetchall()
+        response["message"] = "Vehicles retrieved successfully"
+        response["data"] = data
     return jsonify(response)
 
 
