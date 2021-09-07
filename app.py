@@ -329,11 +329,11 @@ def vehicle():   # a function to add and view vehicles
 
     if request.method == "POST":    # this method adds vehicles
         try:
-            car_type = request.form['Type']
-            year_modal = request.form['Year_Modal']
-            vin_numb = request.form['VIN_Numb']
-            reg_numb = request.form['Reg_Numb']
-            username = request.form['Username']
+            car_type = request.json['Type']
+            year_modal = request.json['Year_Modal']
+            vin_numb = request.json['VIN_Numb']
+            reg_numb = request.json['Reg_Numb']
+            username = request.json['Username']
 
             email = get_email(username)
             print(email)
