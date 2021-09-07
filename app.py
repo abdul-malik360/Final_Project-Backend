@@ -488,6 +488,19 @@ def view_vehicle(reg_numb):
     return jsonify(response)
 
 
+# a route to view a client's vehicle
+@app.route('/view-client-vehicle/<username>', methods=["GET"])
+def view_client_vehicle(username):
+    response = {}
+    with sqlite3.connect("QAT_Motors.db") as connect:
+        cursor = connect.cursor()
+        cursor.execute("SELECT * FROM Vehicles WHERE Username='" + str(username) + "'")
+        response["status_code"] = 200
+        response["message"] = "Vehicle retrieved successfully"
+        response["data"] = cursor.fetchall()
+    return jsonify(response)
+
+
 @app.route('/service', methods=["POST", "GET"])      # a route for services with post and get methods
 def service():   # a function to add and view services
     response = {}
