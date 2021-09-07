@@ -113,8 +113,8 @@ mail = Mail(app)    # end of email code config
 @app.route('/client-login', methods=["PATCH"])
 def client_login():
     response = {}
-    username = request.form['Username']
-    password = request.form['Password']
+    username = request.json['Username']
+    password = request.json['Password']
 
     with sqlite3.connect("QAT_Motors.db") as connect:
         cursor = connect.cursor()
@@ -129,8 +129,8 @@ def client_login():
 @app.route('/admin-login', methods=["GET"])
 def admin_login():
     response = {}
-    username = request.form['Username']
-    password = request.form['Password']
+    username = request.json['Username']
+    password = request.json['Password']
 
     with sqlite3.connect("QAT_Motors.db") as connect:
         cursor = connect.cursor()
@@ -147,9 +147,9 @@ def admin():    # function to add and show admin users
     response = {}   # making response an empty dictionary
 
     if request.method == "POST":    # if the function method is post admin registers data
-        fullname = request.form['Fullname']
-        username = request.form['Username']
-        password = request.form['Password']
+        fullname = request.json['Fullname']
+        username = request.json['Username']
+        password = request.json['Password']
 
         with sqlite3.connect("QAT_Motors.db") as connect:
             cursor = connect.cursor()
@@ -223,14 +223,14 @@ def client():   # a function to add and view users
 
     if request.method == "POST":    # this method adds clients
         try:
-            name = request.form['Name']
-            surname = request.form['Surname']
-            title = request.form['Title']
-            email = request.form['Email']
-            cell = request.form['Cell']
-            address = request.form['Address']
-            username = request.form['Username']
-            password = request.form['Password']
+            name = request.json['Name']
+            surname = request.json['Surname']
+            title = request.json['Title']
+            email = request.json['Email']
+            cell = request.json['Cell']
+            address = request.json['Address']
+            username = request.json['Username']
+            password = request.json['Password']
 
             regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'    # code to validate email entered
 
@@ -412,9 +412,9 @@ def edit_vehicle(reg_numb):
 
     if request.method == "PUT":     # this method will edit the vehicle's data
         try:
-            car_type = request.form['Type']
-            year_modal = request.form['Year_Modal']
-            vin_numb = request.form['VIN_Numb']
+            car_type = request.json['Type']
+            year_modal = request.json['Year_Modal']
+            vin_numb = request.json['VIN_Numb']
             # reg_numb = request.form['Reg_Numb']
 
             with sqlite3.connect("QAT_Motors.db") as connect:
@@ -558,10 +558,10 @@ def appointments():   # a function to add and view appointments
 
     if request.method == "POST":    # this method adds appointments
         try:
-            reg_numb = request.form['Reg_Numb']
-            service_type = request.form['Type']
-            day = request.form['Day']
-            time = request.form['Time']
+            reg_numb = request.json['Reg_Numb']
+            service_type = request.json['Type']
+            day = request.json['Day']
+            time = request.json['Time']
 
             with sqlite3.connect("QAT_Motors.db") as connect:
                 cursor = connect.cursor()
@@ -608,9 +608,9 @@ def edit_appointment(reg_numb):
     if request.method == "PUT":     # this method will edit the appointment's data
         try:
             # reg_numb = request.form['Reg_Numb']
-            service_type = request.form['Type']
-            day = request.form['Day']
-            time = request.form['Time']
+            service_type = request.json['Type']
+            day = request.json['Day']
+            time = request.json['Time']
 
             with sqlite3.connect("QAT_Motors.db") as connect:
                 cursor = connect.cursor()
