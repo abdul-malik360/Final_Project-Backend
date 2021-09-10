@@ -96,6 +96,14 @@ def get_title(username):    # a function to retrieve a title of clients
         return cursor.fetchone()
 
 
+def get_client_username(reg_numb):    # a function to retrieve email address of clients
+
+    with sqlite3.connect("QAT_Motors.db") as connect:
+        cursor = connect.cursor()
+        cursor.execute("SELECT Username from Vehicles WHERE Reg_Numb='" + str(reg_numb) + "'")
+        return cursor.fetchone()
+
+
 # starting the Flask app
 app = Flask(__name__)   # allows you to use api
 CORS(app)
@@ -598,10 +606,26 @@ def appointments():   # a function to add and view appointments
 
     if request.method == "POST":    # this method adds appointments
         try:
-            reg_numb = request.json['Reg_Numb']
-            service_type = request.json['Type']
-            day = request.json['Day']
-            time = request.json['Time']
+            reg_numb = request.form['Reg_Numb']
+            service_type = request.form['Type']
+            day = request.form['Day']
+            time = request.form['Time']
+
+            username_tuple = get_client_username(reg_numb)
+            username = ''.join(username_tuple)  # str.join() to convert tuple to string.
+            print(username)
+
+            email_tuple = get_email(username)
+            email = ''.join(email_tuple)  # str.join() to convert tuple to string.
+            print(email)
+
+            title_tuple = get_title(username)
+            title = ''.join(title_tuple)  # str.join() to convert tuple to string.
+            print(title)
+
+            surname_tuple = get_surname(username)
+            surname = ''.join(surname_tuple)  # str.join() to convert tuple to string.
+            print(surname)
 
             with sqlite3.connect("QAT_Motors.db") as connect:
                 cursor = connect.cursor()
@@ -612,6 +636,12 @@ def appointments():   # a function to add and view appointments
                                "Time) VALUES(?, ?, ?, ?)",
                                (reg_numb, service_type, day, time))
                 connect.commit()
+
+                msg = Message('Vehicle Booking Successful', sender='62545a@gmail.com', recipients=[str(email)])
+                msg.body = "Thank you for Booking your vehicle to our services " + title + " " + surname + ". " \
+                           + reg_numb + " is booked for " + day + " @ " + time
+
+                mail.send(msg)
 
                 response["message"] = "Successfully added appointment"
                 response["status_code"] = 201
