@@ -708,13 +708,13 @@ def edit_appointment(reg_numb):
         return response
 
 
-@app.route('/view-client-appointment/<username>', methods=["GET"])
-def view_client_appointment(username):
+@app.route('/view-client-appointment/<reg_numb>', methods=["GET"])
+def view_client_appointment(reg_numb):
     response = {}
     with sqlite3.connect("QAT_Motors.db") as connect:
         cursor = connect.cursor()
         cursor.row_factory = sqlite3.Row
-        cursor.execute("SELECT * FROM Appointments WHERE Username='" + str(username) + "'")
+        cursor.execute("SELECT * FROM Appointments WHERE Reg_Numb='" + str(reg_numb) + "'")
 
         appointments = cursor.fetchall()
 
