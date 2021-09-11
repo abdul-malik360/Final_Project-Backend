@@ -708,6 +708,27 @@ def edit_appointment(reg_numb):
         return response
 
 
+@app.route('/view-client-appointment/<username>', methods=["GET"])
+def view_client_appointment(username):
+    response = {}
+    with sqlite3.connect("QAT_Motors.db") as connect:
+        cursor = connect.cursor()
+        cursor.row_factory = sqlite3.Row
+        cursor.execute("SELECT * FROM Appointments WHERE Username='" + str(username) + "'")
+
+        appointments = cursor.fetchall()
+
+        data = []
+
+        for i in appointments:
+            data.append({u: i[u] for u in i.keys()})
+
+        response["status_code"] = 200
+        response["message"] = "appointment retrieved successfully"
+        response["data"] = data
+    return jsonify(response)
+
+
 # a route with a function to recover Client's Username and Password
 @app.route('/recovery', methods=["POST"])
 def recovery():
