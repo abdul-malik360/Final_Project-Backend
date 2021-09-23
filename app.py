@@ -1,6 +1,8 @@
 # Import modules needed
 import sqlite3
 import re
+import cloudinary
+import cloudinary.uploader
 
 from flask import Flask, request, jsonify
 from flask_mail import Mail, Message
@@ -57,7 +59,15 @@ class QatTables:
                              "CONSTRAINT fk_Vehicles FOREIGN KEY (Reg_Numb) REFERENCES Vehicles (Reg_Numb)"
                              "CONSTRAINT fk_Services FOREIGN KEY (Type) REFERENCES Services (Type))")
         print("Appointments table created successfully")
-        self.connect.close()    # closes connection to database
+
+        self.connect.execute("CREATE TABLE IF NOT EXISTS Reviews(Review_Numb INTEGER PRIMARY KEY AUTOINCREMENT,"
+                             "Picture TEXT NOT NULL,"
+                             "Feedback TEXT NOT NULL," 
+                             "Stars TEXT NOT NULL ,"
+                             "Username TEXT NOT NULL,"
+                             "CONSTRAINT fk_Clients FOREIGN KEY (Username) REFERENCES Clients (Username))")
+        print("Reviews table created successfully")  # checking if table was created
+        self.connect.close()  # closes connection to database
 
 
 QatTables()     # calling the class
@@ -102,6 +112,23 @@ def get_client_username(reg_numb):    # a function to retrieve email address of 
         cursor = connect.cursor()
         cursor.execute("SELECT Username from Vehicles WHERE Reg_Numb='" + str(reg_numb) + "'")
         return cursor.fetchone()
+
+
+# function to upload images into urls
+def upload_image():
+    app.logger.info('in upload route')
+    cloudinary.config(cloud_name="dirastnon",
+                      api_key="565884475789348",
+                      api_secret="MAXeHuWS8X-miyXiQqqPvK41oIc"
+                      )
+    upload_result = None
+    if request.method == 'POST' or request.method == 'PUT':
+        picture = request.json['Picture']
+        app.logger.info('%s file_to_upload', picture)
+        if picture:
+            upload_result = cloudinary.uploader.upload(picture)
+            app.logger.info(upload_result)
+            return upload_result['url']
 
 
 # starting the Flask app
@@ -484,7 +511,6 @@ def view_vehicle(reg_numb):
 
         vehicle = cursor.fetchone()
 
-
     response['status_code'] = 200
     # response["message"] = "vehicle retrieved successfully"
     response['data'] = vehicle
@@ -711,6 +737,8 @@ def edit_appointment(reg_numb):
 @app.route('/view-client-appointment/<reg_numb>', methods=["GET"])
 def view_client_appointment(reg_numb):
     response = {}
+    # username = get_username()
+    # print(get_username())
     with sqlite3.connect("QAT_Motors.db") as connect:
         cursor = connect.cursor()
         cursor.row_factory = sqlite3.Row
@@ -757,6 +785,71 @@ def recovery():
         else:
             response['message'] = "Invalid Email Address"
     return response
+
+
+@app.route('/reviews', methods=["POST", "GET"])      # a route for reviews with post and get methods
+def review():   # a function to add and view reviews
+    response = {}
+
+    if request.method == "POST":    # this method adds reviews
+        try:
+            picture = upload_image()
+            feedback = request.json['Feedback']
+            stars = request.json['Stars']
+            username = request.json['Username']
+
+            email_tuple = get_email(username)
+            email = ''.join(email_tuple)  # str.join() to convert tuple to string.
+            print(email)
+
+            title_tuple = get_title(username)
+            title = ''.join(title_tuple)  # str.join() to convert tuple to string.
+            print(title)
+
+            surname_tuple = get_surname(username)
+            surname = ''.join(surname_tuple)  # str.join() to convert tuple to string.
+            print(surname)
+
+            with sqlite3.connect("QAT_Motors.db") as connect:
+                cursor = connect.cursor()
+                cursor.execute("INSERT INTO Reviews("
+                               "Picture,"
+                               "Feedback,"
+                               "Stars,"
+                               "Username) VALUES(?, ?, ?, ?)",
+                               (picture, feedback, stars, username))
+                connect.commit()
+
+                msg = Message('QAT Motors: Feedback', sender='62545a@gmail.com', recipients=[str(email)])
+                msg.body = "Thank you for your feedback " + title + " " + surname
+                mail.send(msg)
+
+                response["message"] = "Successfully Sent feedback, Check Email"
+                response["status_code"] = 201
+
+        except TypeError:      # check this
+            response['message'] = "Invalid Username"
+
+        return response
+
+    if request.method == "GET":    # if the function method is get, all data from the Reviews table is displayed
+        response = {}
+
+        with sqlite3.connect("QAT_Motors.db") as connect:
+            cursor = connect.cursor()
+            cursor.row_factory = sqlite3.Row
+            cursor.execute("SELECT * FROM Reviews")
+
+            reviews = cursor.fetchall()
+
+            data = []
+
+            for i in reviews:
+                data.append({u: i[u] for u in i.keys()})
+
+        response['status_code'] = 200
+        response['data'] = data
+        return jsonify(response)
 
 
 if __name__ == '__main__':
